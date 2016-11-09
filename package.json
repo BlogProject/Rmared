@@ -17,7 +17,10 @@
   },
   "homepage": "https://github.com/BlogProject/Rmared#readme",
   "dependencies": {
+    "katex": "^0.6.0",
+    "lodash.unescape": "^4.0.1",
     "marked": "^0.3.6",
+    "prismjs": "^1.5.1",
     "pygmentize-bundled": "^2.3.0"
   }
 }
