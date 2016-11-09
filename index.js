@@ -1,12 +1,10 @@
 var marked = require('marked');
-var highlight = require('pygmentize-bundled');
+var katex = require('katex')
+var unescape = require('lodash.unescape');
 
+var editormd = {};
 
-
-
-
-
-var editormd = function(markdownToC,options){
+editormd.init = function(markdownToC,options){
     var self = editormd;
     marked.setOptions({
         renderer: self.markedRenderer(markdownToC,options),
@@ -17,18 +15,9 @@ var editormd = function(markdownToC,options){
         sanitize: false,
         smartLists: true,
         smartypants: false,
-        highlight: function (code, lang, callback) {
-            if(lang === '')
-                lang = editormd.defaultLang;
-            highlight({ lang: lang, format: 'html' }, code, function (err, result) {
-                callback(err, result.toString());
-            });
-        }
     });
-
     return marked;
 };
-
 
 /* 增加 extend */
 void function(global){
@@ -79,6 +68,13 @@ void function(global){
 
     global.extend = extend;
 }(editormd)
+
+
+editormd.urls = {
+    atLinkBase : "https://github.com/"
+};
+
+editormd.classPrefix  = "editormd-";
 
 editormd.classNames  = {
     tex : editormd.classPrefix + "tex"
@@ -132,9 +128,9 @@ editormd.markedRenderer = function(markdownToC, options) {
         pageBreak            : true,
         atLink               : true,           // for @link
         emailLink            : true,           // for mail address auto link
-        taskList             : false,          // Enable Github Flavored Markdown task lists
+        taskList             : true,          // Enable Github Flavored Markdown task lists
         emoji                : true,          // :emoji: , Support Twemoji, fontAwesome, Editor.md logo emojis.
-        tex                  : false,          // TeX(LaTeX), based on KaTeX
+        tex                  : true,          // TeX(LaTeX), based on KaTeX
         flowChart            : false,          // flowChart.js only support IE9+
         sequenceDiagram      : false,          // sequenceDiagram.js only support IE9+
     };
@@ -238,7 +234,7 @@ editormd.markedRenderer = function(markdownToC, options) {
             if (settings.emailLink)
             {
                 text = text.replace(emailLinkReg, function($1, $2, $3, $4, $5) {
-                    return (!$2 && $.inArray($5, "jpg|jpeg|png|gif|webp|ico|icon|pdf".split("|")) < 0) ? "<a href=\"mailto:" + $1 + "\">"+$1+"</a>" : $1;
+                    return (!$2 && "jpg|jpeg|png|gif|webp|ico|icon|pdf".split("|").indexOf($5) < 0) ? "<a href=\"mailto:" + $1 + "\">"+$1+"</a>" : $1;
                 });
             }
 
@@ -347,12 +343,16 @@ editormd.markedRenderer = function(markdownToC, options) {
         if (!isTeXLine && isTeXInline) 
         {
             text = text.replace(/(\$\$([^\$]*)\$\$)+/g, function($1, $2) {
-                return "<span class=\"" + editormd.classNames.tex + "\">" + $2.replace(/\$/g, "") + "</span>";
+                var m_code = $2.replace(/\$/g, "");
+                console.log(m_code)
+                return "<span class=\"" + editormd.classNames.tex + "\">" + katex.renderToString(m_code) + "</span>";
             });
         } 
         else 
         {
             text = (isTeXLine) ? text.replace(/\$/g, "") : text;
+            if(isTeXLine)
+                console.log(text)
         }
 
         var tocHTML = "<div class=\"markdown-toc editormd-markdown-toc\">" + text + "</div>";
@@ -379,7 +379,15 @@ editormd.markedRenderer = function(markdownToC, options) {
         else 
         {
 
-            return marked.Renderer.prototype.code.apply(this, arguments);
+            var code = marked.Renderer.prototype.code.apply(this, arguments);
+            var reg = /^<pre><code class="(.*)">/
+            if( reg.test(code)){
+                var new_code = code.replace(reg,'<pre><code class="prettyprint linenums">')
+                return new_code;
+            }
+            else
+                return code;
+
         }
     };
 
@@ -406,5 +414,5 @@ editormd.markedRenderer = function(markdownToC, options) {
     return markedRenderer;
 }
 
-module.exports = editormd;
+module.exports = editormd.init;
 
