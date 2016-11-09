@@ -1,10 +1,90 @@
 var marked = require('marked');
+var highlight = require('pygmentize-bundled');
 
-var editormd = {};
+
+
+
+
+
+var editormd = function(markdownToC,options){
+    var self = editormd;
+    marked.setOptions({
+        renderer: self.markedRenderer(markdownToC,options),
+        gfm: true,
+        tables: true,
+        breaks: false,
+        pedantic: false,
+        sanitize: false,
+        smartLists: true,
+        smartypants: false,
+        highlight: function (code, lang, callback) {
+            if(lang === '')
+                lang = editormd.defaultLang;
+            highlight({ lang: lang, format: 'html' }, code, function (err, result) {
+                callback(err, result.toString());
+            });
+        }
+    });
+
+    return marked;
+};
+
+
+/* 增加 extend */
+void function(global){
+    var extend,
+        _extend,
+        _isObject;
+
+    _isObject = function(o){
+        return Object.prototype.toString.call(o) === '[object Object]';
+    }
+
+    _extend = function self(destination, source) {
+        var property;
+        for (property in destination) {
+            if (destination.hasOwnProperty(property)) {
+
+                // 若destination[property]和sourc[property]都是对象，则递归
+                if (_isObject(destination[property]) && _isObject(source[property])) {
+                    self(destination[property], source[property]);
+                };
+
+                // 若sourc[property]已存在，则跳过
+                if (source.hasOwnProperty(property)) {
+                    continue;
+                } else {
+                    source[property] = destination[property];
+                }
+            }
+        }
+    }
+
+    extend = function(){
+        var arr = arguments,
+            result = {},
+            i;
+
+        if (!arr.length) return {};
+
+        for (i = arr.length - 1; i >= 0; i--) {
+            if (_isObject(arr[i])) {
+                _extend(arr[i], result);
+            };
+        }
+
+        arr[0] = result;
+        return result;
+    }
+
+    global.extend = extend;
+}(editormd)
 
 editormd.classNames  = {
     tex : editormd.classPrefix + "tex"
 };
+
+editormd.defaultLang =  'cpp';
 
 editormd.emoji     = {
     path  : "http://www.webpagefx.com/tools/emoji-cheat-sheet/graphics/emojis/",
@@ -59,7 +139,7 @@ editormd.markedRenderer = function(markdownToC, options) {
         sequenceDiagram      : false,          // sequenceDiagram.js only support IE9+
     };
 
-    var settings = defaults;
+    var settings = editormd.extend(defaults, options|| {});
     var regexs          = editormd.regexs;
     var atLinkReg       = regexs.atLink;
     var emojiReg        = regexs.emoji;
@@ -326,16 +406,5 @@ editormd.markedRenderer = function(markdownToC, options) {
     return markedRenderer;
 }
 
-marked.setOptions({
-    renderer: editormd.markedRenderer([]),
-    gfm: true,
-    tables: true,
-    breaks: false,
-    pedantic: false,
-    sanitize: false,
-    smartLists: true,
-    smartypants: false
-});
+module.exports = editormd;
 
-var content = marked(':tw-1f1ea: \n :smile: \n ## h1');
-console.log(content)
