@@ -11,8 +11,9 @@ var DIR = './'
 http.createServer(function(request, response) {
 
 var layout = fs.readFileSync('./index.html',{encoding:'utf8'});
+            console.log(request.url)
 
-    if( require.url === '/' || request.url === '/index.html'){
+    if( request.url === '/' || request.url === '/index.html'){
         var md = fs.readFileSync('./test.md',{encoding:'utf8'});
         var m_html =  Rmarked(md);
         var html = layout.replace('{{content}}',m_html)
@@ -37,6 +38,7 @@ var layout = fs.readFileSync('./index.html',{encoding:'utf8'});
             response.write("This request URL " + pathname + " was not found on this server.");
             response.end();
         } else {
+            console.log(realPath)
             fs.readFile(realPath, "binary", function (err, file) {
                 if (err) {
                     response.writeHead(500, {
