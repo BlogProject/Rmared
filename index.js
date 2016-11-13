@@ -131,7 +131,7 @@ editormd.markedRenderer = function(markdownToC, options) {
         taskList             : true,          // Enable Github Flavored Markdown task lists
         emoji                : true,          // :emoji: , Support Twemoji, fontAwesome, Editor.md logo emojis.
         tex                  : true,          // TeX(LaTeX), based on KaTeX
-        flowChart            : false,          // flowChart.js only support IE9+
+        flowChart            : true,          // flowChart.js only support IE9+
         sequenceDiagram      : false,          // sequenceDiagram.js only support IE9+
     };
 
@@ -344,16 +344,17 @@ editormd.markedRenderer = function(markdownToC, options) {
         {
             text = text.replace(/(\$\$([^\$]*)\$\$)+/g, function($1, $2) {
                 var m_code = $2.replace(/\$/g, "");
-                console.log(m_code)
+                //console.log(m_code)
+                m_code = unescape(m_code);
                 return "<span class=\"" + editormd.classNames.tex + "\">" + katex.renderToString(m_code) + "</span>";
             });
         } 
-        else 
-        {
-            text = (isTeXLine) ? text.replace(/\$/g, "") : text;
-            if(isTeXLine)
-                console.log(text)
+        else if(isTeXLine){
+                //console.log(text)
+                text = unescape(text.replace(/\$/g, ""))
+                text = katex.renderToString(text)
         }
+            //text = (isTeXLine) ? text.replace(/\$/g, "") : text;
 
         var tocHTML = "<div class=\"markdown-toc editormd-markdown-toc\">" + text + "</div>";
 
@@ -374,7 +375,9 @@ editormd.markedRenderer = function(markdownToC, options) {
         } 
         else if ( lang === "math" || lang === "latex" || lang === "katex")
         {
-            return "<p class=\"" + editormd.classNames.tex + "\">" + code + "</p>";
+            var m_code = unescape( code);
+            m_code = katex.renderToString(m_code);
+            return "<p class=\"" + editormd.classNames.tex + "\">" + m_code + "</p>";
         } 
         else 
         {
@@ -382,7 +385,7 @@ editormd.markedRenderer = function(markdownToC, options) {
             var code = marked.Renderer.prototype.code.apply(this, arguments);
             var reg = /^<pre><code class="(.*)">/
             if( reg.test(code)){
-                var new_code = code.replace(reg,'<pre><code class="prettyprint linenums">')
+                var new_code = code.replace(reg,'<pre class="prettyprint linenums"><code>')
                 return new_code;
             }
             else
