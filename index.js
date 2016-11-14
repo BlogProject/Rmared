@@ -1,6 +1,14 @@
 var marked = require('marked');
 var katex = require('katex')
-var unescape = require('lodash.unescape');
+
+function unescape(html) {
+  return String(html)
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, '\'')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
 
 var editormd = {};
 
