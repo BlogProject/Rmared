@@ -36,6 +36,18 @@
   border: none;
   vertical-align: middle;
 }
+
+
+.editormd img {
+    max-width: 90%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 40px;
+    margin-bottom: 40px;
+    border-radius: 5px;
+}
+
 .editormd > textarea,
 .editormd .editormd-html-textarea,
 .editormd .editormd-markdown-textarea {
